@@ -97,7 +97,7 @@ $latestPosts = Post::latest()->take(3)->get();
                         container.innerHTML += `<img src='${block.data.file.url}' alt='' class='my-6'/>`;
                     } else if (block.type === 'list') {
                         const tag = block.data.style === 'ordered' ? 'ol' : 'ul';
-                        const items = block.data.items.map(item => `<li>${item}</li>`).join('');
+                        const items = block.data.items.map(item => `<li>${item.content}</li>`).join('');
                         container.innerHTML += `<${tag}>${items}</${tag}>`;
                     } else if (block.type === 'embed' && block.data.service === 'youtube') {
                         container.innerHTML += `<div class='my-6'><iframe width='100%' height='350' src='${block.data.embed}' frameborder='0' allowfullscreen class='rounded-xl shadow'></iframe></div>`;
