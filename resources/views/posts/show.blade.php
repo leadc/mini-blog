@@ -6,7 +6,7 @@ $latestPosts = Post::latest()->take(3)->get();
 <x-app-layout>
     <div class="bg-gradient-to-b from-pink-50 via-white to-white dark:bg-gray-900 min-h-screen pb-16">
         <div class="max-w-3xl mx-auto pt-12">
-            <div class="flex flex-col md:flex-row items-center md:items-start gap-8 mb-5">
+            <div class="flex flex-col md:flex-row items-center md:items-start gap-8 mb-6">
                 @php
                     // Buscar la primera imagen del contenido como destacada
                     $featured = null;
