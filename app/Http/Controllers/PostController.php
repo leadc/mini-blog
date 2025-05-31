@@ -24,11 +24,12 @@ class PostController extends Controller
     {
         if ($request->hasFile('image')) {
             $file = $request->file('image');
-            $path = $file->store('posts', 'public');
+            // Guardar directamente en public/storage/posts
+            $path = $file->store('posts', ['disk' => 'custom_public']);
             return response()->json([
                 'success' => 1,
                 'file' => [
-                    'url' => Storage::url($path)
+                    'url' => '/public/storage/posts/' . basename($path)
                 ]
             ]);
         }
@@ -42,11 +43,9 @@ class PostController extends Controller
     {
         $url = $request->input('url');
         if ($url) {
-            // Obtener el path relativo a storage/app/public
-            $publicPath = parse_url($url, PHP_URL_PATH);
-            $storagePath = str_replace('/storage/', '', $publicPath);
-            if (Storage::disk('public')->exists($storagePath)) {
-                Storage::disk('public')->delete($storagePath);
+            $path = public_path(parse_url($url, PHP_URL_PATH));
+            if (file_exists($path)) {
+                @unlink($path);
                 return response()->json(['success' => 1]);
             }
         }
@@ -58,20 +57,13 @@ class PostController extends Controller
      */
     public function destroy(Post $post)
     {
-        // Solo el dueño o admin puede borrar
-        if (Auth::id() !== $post->user_id) {
-            abort(403);
-        }
-        // Eliminar imágenes asociadas en el contenido
-        $content = $post->content;
-        if (is_array($content) && isset($content['blocks'])) {
-            foreach ($content['blocks'] as $block) {
-                if ($block['type'] === 'image' && isset($block['data']['file']['url'])) {
-                    $url = $block['data']['file']['url'];
-                    $publicPath = parse_url($url, PHP_URL_PATH);
-                    $storagePath = str_replace('/storage/', '', $publicPath);
-                    if (Storage::disk('public')->exists($storagePath)) {
-                        Storage::disk('public')->delete($storagePath);
+        // Eliminar imágenes asociadas al post
+        if (isset($post->content['blocks'])) {
+            foreach ($post->content['blocks'] as $block) {
+                if ($block['type'] === 'image' && !empty($block['data']['file']['url'])) {
+                    $imgPath = public_path(parse_url($block['data']['file']['url'], PHP_URL_PATH));
+                    if (file_exists($imgPath)) {
+                        @unlink($imgPath);
                     }
                 }
             }

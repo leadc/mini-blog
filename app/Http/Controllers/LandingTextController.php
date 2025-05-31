@@ -34,20 +34,27 @@ class LandingTextController extends Controller
                 $current = LandingText::where('key', $key)->value('value');
                 // Eliminar imagen si se pide
                 if ($request->has('delete_' . $key) && $current) {
-                    if (Storage::disk('public')->exists(str_replace('/storage/', '', $current))) {
-                        Storage::disk('public')->delete(str_replace('/storage/', '', $current));
+                    $imgPath = public_path(parse_url($current, PHP_URL_PATH));
+                    if (file_exists($imgPath)) {
+                        @unlink($imgPath);
                     }
                     LandingText::updateOrCreate(['key' => $key], ['value' => '']);
                     $current = '';
                 }
                 // Subir nueva imagen
                 if ($request->hasFile($key)) {
-                    if ($current && Storage::disk('public')->exists(str_replace('/storage/', '', $current))) {
-                        Storage::disk('public')->delete(str_replace('/storage/', '', $current));
+                    if ($current) {
+                        $imgPath = public_path(parse_url($current, PHP_URL_PATH));
+                        if (file_exists($imgPath)) {
+                            @unlink($imgPath);
+                        }
                     }
                     $file = $request->file($key);
-                    $path = $file->store('landing', 'public');
-                    $publicPath = '/storage/' . $path;
+                    $dir = public_path('storage/landing');
+                    if (!is_dir($dir)) mkdir($dir, 0777, true);
+                    $filename = uniqid('landing_') . '.' . $file->getClientOriginalExtension();
+                    $file->move($dir, $filename);
+                    $publicPath = '/public/storage/landing/' . $filename;
                     LandingText::updateOrCreate(['key' => $key], ['value' => $publicPath]);
                 }
             } else {
